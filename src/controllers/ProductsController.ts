@@ -217,7 +217,7 @@ export default {
             memory: `${data.memory !== '' && data.memory !== undefined ? data.memory : product.memory}`,
             price: data.price !== 0 ? data.price : product.price,
             availability: data.availability,
-            priceForTwo: data.price !== 0 ? Number((data.price + data.price).toFixed(2)) * 0.7 : product.priceForTwo,
+            priceForTwo: data.price !== 0 ? Number((data.price + data.price * 0.7).toFixed(2)) : product.priceForTwo,
             updateTimes: image !== '' && image !== undefined ? product.updateTimes + 1 : product.updateTimes
           }
         });
