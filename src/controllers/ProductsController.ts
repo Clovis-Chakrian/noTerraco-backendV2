@@ -54,7 +54,7 @@ export default {
         imageUrl: 'Sem imagem para esse',
         price: Number(price),
         availability,
-        priceForTwo: Number(price) + Number(price) * 0.7,
+        priceForTwo: Number((Number(price) + Number(price) * 0.7).toFixed(2)),
         updateTimes: 1
       };
 
@@ -82,7 +82,7 @@ export default {
       imageUrl: fileName,
       price: Number(price),
       availability,
-      priceForTwo: Number(price) + Number(price) * 0.7,
+      priceForTwo: Number((Number(price) + Number(price) * 0.7).toFixed(2)),
       updateTimes: 1
     };
 
@@ -217,7 +217,7 @@ export default {
             memory: `${data.memory !== '' && data.memory !== undefined ? data.memory : product.memory}`,
             price: data.price !== 0 ? data.price : product.price,
             availability: data.availability,
-            priceForTwo: data.price !== 0 ? data.price + data.price * 0.7 : product.priceForTwo,
+            priceForTwo: data.price !== 0 ? Number((data.price + data.price).toFixed(2)) * 0.7 : product.priceForTwo,
             updateTimes: image !== '' && image !== undefined ? product.updateTimes + 1 : product.updateTimes
           }
         });
@@ -246,7 +246,7 @@ export default {
         }).then(() => {
           const fileName = removeSpecialCharacters(product.name.replace(/ /g, '_'));
           deleteFile(`${fileName}_${product.updateTimes}`);
-        }).catch(err => {
+        }).catch((err: any) => {
           console.error(err);
         });
 
