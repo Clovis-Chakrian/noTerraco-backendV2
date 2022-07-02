@@ -136,7 +136,6 @@ export default {
     };
   },
 
-
   async show(request: Request, response: Response) {
     await prismaClient.$connect()
     const { id } = request.params;
