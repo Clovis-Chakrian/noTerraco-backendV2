@@ -13,5 +13,7 @@ productsRoutes.delete('/product/:id', AdminsController.authenticate, ProductsCon
 
 productsRoutes.post('/wine', WinesController.create);
 productsRoutes.get('/wines', WinesController.index);
-productsRoutes.get('/', WinesController.test);
+productsRoutes.get('/wine/:id', WinesController.show);
+productsRoutes.put('/wine/:id', WinesController.update);
+productsRoutes.delete('/wine/:id', WinesController.delete);
 export default productsRoutes;
