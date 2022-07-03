@@ -24,7 +24,7 @@ model Product {
   @@map("products")
 }
 
-model Appetizers {
+model Appetizer {
   id   String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   description  String
@@ -36,7 +36,7 @@ model Appetizers {
   @@map("appetizers")
 }
 
-model Salads {
+model Salad {
   id   String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   subtype String
@@ -49,7 +49,7 @@ model Salads {
   @@map("salads")
 }
 
-model MainDishes {
+model MainDishe {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   subtype String
@@ -63,7 +63,7 @@ model MainDishes {
   @@map("main_dishes")
 }
 
-model Drinks {
+model Drink {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   subtype String
@@ -76,7 +76,7 @@ model Drinks {
   @@map("drinks")
 }
 
-model Desserts {
+model Dessert {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   description  String
