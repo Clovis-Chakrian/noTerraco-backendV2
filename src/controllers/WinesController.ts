@@ -71,7 +71,8 @@ export default {
 
         return response.status(200).json({ wine });
       } catch (error) {
-
+        console.log(error);
+        return response.status(500).json({ message: 'Erro interno do servidor!' });
       }
     } else {
       try {
@@ -149,7 +150,7 @@ export default {
           const base64 = image.replace(/^data:image\/jpeg;base64,/, "");
           const fileName = removeSpecialCharacters(wine.name.replace(/ /g, '_'));
           const newImgName = data.name ? removeSpecialCharacters(data.name.replace(/ /g, '_')) : console.log('sem novos nomes');
-          updateImages(`${fileName}_${wine.updateTimes}`, base64, `${data.name !== '' && data.name !== undefined ? newImgName : fileName}_${wine.updateTimes + 1}`, `pratos`);
+          updateImages(`${fileName}_${wine.updateTimes}`, base64, `${data.name !== '' && data.name !== undefined ? newImgName : fileName}_${wine.updateTimes + 1}`, `vinhos`);
         };
 
         const newImgName = data.name ? removeSpecialCharacters(data.name.replace(/ /g, '_')) : console.log('sem novos nomes');
