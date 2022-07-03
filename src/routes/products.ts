@@ -16,4 +16,5 @@ productsRoutes.get('/wines', WinesController.index);
 productsRoutes.get('/wine/:id', WinesController.show);
 productsRoutes.put('/wine/:id', WinesController.update);
 productsRoutes.delete('/wine/:id', WinesController.delete);
+
 export default productsRoutes;
