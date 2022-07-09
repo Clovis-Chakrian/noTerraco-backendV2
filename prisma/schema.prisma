@@ -92,6 +92,7 @@ model ExtraPortion {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String
   price Float
+  availability Boolean
 
   @@map("extra_portion")
 }
@@ -101,6 +102,7 @@ model Pets {
   name String
   description String
   price Float
+  availability Boolean
   
   @@map("pets")
 }
