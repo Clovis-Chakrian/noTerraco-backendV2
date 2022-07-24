@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["mongoDb"]
 }
 
@@ -9,25 +9,121 @@ datasource db {
 }
 
 model Product {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  type String
-  subtype String
-  description String
-  memory String
-  imageUrl String
-  price Float
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  type         String
+  subtype      String
+  description  String
+  memory       String
+  imageUrl     String
+  price        Float
   availability Boolean
-  priceForTwo Float
-  updateTimes Int
+  priceForTwo  Float
+  updateTimes  Int
 
   @@map("products")
 }
 
-model Admin {
+model Appetizer {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  description  String
+  imageURL String
+  price Float
+  availability Boolean
+  updateTimes  Int
+
+  @@map("appetizers")
+}
+
+model Salad {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  subtype String
+  description  String
+  imageURL String
+  price Float
+  availability Boolean
+  updateTimes  Int
+
+  @@map("salads")
+}
+
+model MainDishe {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   name String
-  password String
+  subtype String
+  description String
+  imageURL String
+  price Float
+  priceForTwo Float
+  availability Boolean
+  updateTimes  Int
+
+  @@map("main_dishes")
+}
+
+model Drink {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  subtype String
+  imageURL String
+  description String
+  price Float
+  availability Boolean
+  updateTimes  Int
+
+  @@map("drinks")
+}
+
+model Dessert {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  description  String
+  imageURL String
+  price Float
+  availability Boolean
+  updateTimes  Int
+
+  @@map("desserts")
+}
+
+model ExtraPortion {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  price Float
+  availability Boolean
+
+  @@map("extra_portion")
+}
+
+model Pets {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  description String
+  price Float
+  availability Boolean
+  
+  @@map("pets")
+}
+
+model Wine {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  glassPrice   Float
+  bottlePrice  Float
+  imageUrl     String
+  country      String
+  availability Boolean
+  updateTimes  Int
+
+  @@map("wines")
+}
+
+model Admin {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  password    String
   accountType String
 
   @@map("admins")

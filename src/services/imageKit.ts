@@ -43,10 +43,11 @@ async function updateImages(fileToDelete: string, base64: string, fileName: stri
   });
 };
 
-async function deleteFile(fileToDelete: string) {
+async function deleteFile(fileToDelete: string, path: string) {
   imageKit.listFiles({
     type: 'file',
-    searchQuery: `name = ${fileToDelete}`
+    searchQuery: `name = ${fileToDelete}`,
+    path: path
   }, async (error, result) => {
     if (error) console.log(error);
 

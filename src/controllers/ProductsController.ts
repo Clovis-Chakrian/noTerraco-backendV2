@@ -64,8 +64,6 @@ export default {
         return response.status(400).json(err.errors);
       });
 
-      //await productsRepository.save(product);
-
       await prismaClient.product.create({
         data: product
       })
@@ -106,7 +104,8 @@ export default {
 
     const {
       name,
-      type } = request.query as {
+      type 
+    } = request.query as {
         name: string,
         type: string
       };
@@ -125,7 +124,8 @@ export default {
     } else {
       try {
         const products = await prismaClient.product.findMany({
-          where: { type }
+          where: { type },
+          
         });
 
         return response.status(200).json(productsView.renderMany(products))
@@ -135,7 +135,6 @@ export default {
       }
     };
   },
-
 
   async show(request: Request, response: Response) {
     await prismaClient.$connect()
@@ -245,7 +244,7 @@ export default {
           where: { id }
         }).then(() => {
           const fileName = removeSpecialCharacters(product.name.replace(/ /g, '_'));
-          deleteFile(`${fileName}_${product.updateTimes}`);
+          deleteFile(`${fileName}_${product.updateTimes}`, '/');
         }).catch((err: any) => {
           console.error(err);
         });
