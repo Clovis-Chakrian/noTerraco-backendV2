@@ -74,7 +74,12 @@ export default {
       price,
       description,
       availability
-    } = request.body;
+    } = request.body as {
+      name: string,
+      price: number,
+      description: string,
+      availability: boolean
+    };
 
     const { id } = request.params;
 
@@ -84,7 +89,40 @@ export default {
       description,
       availability
     };
+
+    try {
+      const pet = await prismaClient.pets.findUnique({
+        where: { id }
+      })
+
+      await prismaClient.pets.update({
+        where: { id },
+        data: {
+          name: `${data.name !== '' && data.name !== undefined ? data.name : pet?.name}`,
+          price: data.price !== 0 && data.price !== undefined ? data.price : pet?.price,
+          description: `${data.description !== '' && data.description !== undefined ? data.description : pet?.description}`,
+          availability: data.availability
+        }
+      }).then(() => {
+        return response.status(200).json({ message: 'Produto atualizado com sucesso!' })
+      })
+    } catch (error) {
+      console.log(error);
+      return response.status(500).json({ message: 'Erro interno do servidor.' })
+    }
   },
 
-  async delete(request: Request, response: Response) { },
+  async delete(request: Request, response: Response) {
+    await prismaClient.$connect();
+    const { id } = request.params;
+
+    await prismaClient.pets.delete({
+      where: { id }
+    }).then(() => {
+      return response.status(200).json({ message: 'Produto deletado com sucesso!' });
+    }).catch((err) => {
+      console.log(err);
+      return response.status(500).json({ message: 'Erro interno do servidor, tente novamente mais tarde.' });
+    })
+  },
 }

@@ -244,7 +244,7 @@ export default {
           where: { id }
         }).then(() => {
           const fileName = removeSpecialCharacters(product.name.replace(/ /g, '_'));
-          deleteFile(`${fileName}_${product.updateTimes}`);
+          deleteFile(`${fileName}_${product.updateTimes}`, '/');
         }).catch((err: any) => {
           console.error(err);
         });

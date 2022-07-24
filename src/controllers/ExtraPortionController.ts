@@ -17,7 +17,8 @@ export default {
 
     const extraPortion = {
       name,
-      price
+      price,
+      availability: true
     };
 
     await extraPortionSchema.validate(extraPortion, {
@@ -66,40 +67,37 @@ export default {
     await prismaClient.$connect()
     const {
       name,
-      price
+      price,
+      availability
     } = request.body;
 
     const { id } = request.params;
 
     const data = {
       name,
-      price
+      price,
+      availability
     };
 
-    await extraPortionSchema.validate(data, {
-      abortEarly: false
-    }).then(async () => {
-      try {
-        const extraPortion = await prismaClient.extraPortion.findUnique({
-          where: { id }
-        });
+    try {
+      const extraPortion = await prismaClient.extraPortion.findUnique({
+        where: { id }
+      });
 
-        await prismaClient.extraPortion.update({
-          where: { id },
-          data: {
-            name: `${data.name !== '' && data.name !== undefined ? data.name : extraPortion?.name}`,
-            price: data.price !== 0 && data.price !== undefined ? data.price : extraPortion?.price,
-          }
-        });
+      await prismaClient.extraPortion.update({
+        where: { id },
+        data: {
+          name: `${data.name !== '' && data.name !== undefined ? data.name : extraPortion?.name}`,
+          price: data.price !== 0 && data.price !== undefined ? data.price : extraPortion?.price,
+          availability: data.availability
+        }
+      });
 
-        return response.status(200).json({ message: 'Porção extra atualizada com sucesso.' })
-      } catch (error) {
-        console.log(error);
-        return response.status(500).json({ message: 'Erro interno do servidor.' })
-      };
-    }).catch((err: ValidationError) => {
-      return response.status(400).json(err.errors);
-    });
+      return response.status(200).json({ message: 'Porção extra atualizada com sucesso.' })
+    } catch (error) {
+      console.log(error);
+      return response.status(500).json({ message: 'Erro interno do servidor.' })
+    };
   },
 
   async delete(request: Request, response: Response) {
@@ -112,7 +110,7 @@ export default {
       return response.status(200).json({ message: 'Porção extra deletada com sucesso!' })
     }).catch((err) => {
       console.log(err);
-      return response.status(500).json({message: 'Erro interno do servidor, tente novamente mais tarde.'});
+      return response.status(500).json({ message: 'Erro interno do servidor, tente novamente mais tarde.' });
     })
   },
 }

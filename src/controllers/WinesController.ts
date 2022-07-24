@@ -3,6 +3,7 @@ import { deleteFile, updateImages, uploadImage } from '../services/imageKit';
 import { object, string, number, boolean, ValidationError } from 'yup';
 import prismaClient from '../database/prismaClient';
 import removeSpecialCharacters from '../utils/removeSpecialCharacters';
+import winesView from '../views/wines_view';
 
 export default {
   async create(request: Request, response: Response) {
@@ -31,7 +32,7 @@ export default {
     const wine = {
       name,
       glassPrice,
-      bottlePrice: Number((Number(wineCost) + Number(wineCost) * 0.8).toFixed(2)),
+      bottlePrice: wineCost,
       availability,
       imageUrl: fileName,
       country,
@@ -55,14 +56,19 @@ export default {
 
   async index(request: Request, response: Response) {
     await prismaClient.$connect()
-    const {
+    /*const {
       name,
       country
     } = request.query as {
       name: string,
       country: string
-    };
+    };*/
 
+    const wine = await prismaClient.wine.findMany();
+
+    return response.status(200).json(winesView.renderMany(wine));
+
+    /*
     if (name) {
       try {
         const wine = await prismaClient.wine.findMany({
@@ -85,7 +91,7 @@ export default {
         console.log(error)
         return response.status(500).json({ message: "Erro interno do servidor!" })
       }
-    }
+    }*/
   },
 
   async show(request: Request, response: Response) {
@@ -98,7 +104,7 @@ export default {
         where: { id }
       });
 
-      return response.status(200).json({ wine });
+      if (wine) return response.status(200).json(winesView.render(wine));
     } catch (error) {
       console.log(error);
       return response.status(500).json({ message: "Erro interno do servidor!" });
@@ -115,7 +121,6 @@ export default {
       image,
       country,
       availability,
-      updateTimes
     } = request.body as {
       name: string,
       glassPrice: number
@@ -123,7 +128,6 @@ export default {
       image: string
       country: string
       availability: boolean
-      updateTimes: Number
     };
 
     const { id } = request.params;
@@ -133,11 +137,9 @@ export default {
     const data = {
       name,
       glassPrice: Number(glassPrice),
-      bottlePrice: Number((wineCost + wineCost * 0.8).toFixed(2)),
-      image,
+      bottlePrice: Number(wineCost),
       country,
       availability,
-      updateTimes
     };
 
     try {
@@ -190,10 +192,10 @@ export default {
           where: { id }
         }).then(() => {
           const fileName = removeSpecialCharacters(wine.name.replace(/ /g, '_'));
-          deleteFile(`${fileName}_${wine.updateTimes}`)
-        }).catch(err => {
+          deleteFile(`${fileName}_${wine.updateTimes}`, '/vinhos/')
+        }).catch((err: any) => {
           console.log(err);
-          return response.status(500).json({message: 'Erro interno do servidor'});
+          return response.status(500).json({ message: 'Erro interno do servidor' });
         });
 
         return response.status(200).json({ message: `${wine.name} deletado com sucesso!` })
