@@ -44,9 +44,9 @@ export default {
     }).then(async () => {
       uploadImage(base64, `${fileName}_${wine.updateTimes}`, '/vinhos')
 
-      await prismaClient.wine.create({
-        data: wine,
-      });
+      // await prismaClient.wine.create({
+      //   data: wine,
+      // });
 
       return response.status(201).json({ message: 'Vinho adicionado com sucesso!' });
     }).catch((err: ValidationError) => {
