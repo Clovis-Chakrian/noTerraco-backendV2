@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["mongoDb"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,99 +11,15 @@ model Product {
   id           String  @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   type         String
-  subtype      String
-  description  String
-  memory       String
-  imageUrl     String
-  price        Float
+  subtype      String?
+  description  String?
+  imageUrl     String?
+  imageId      String?
+  price        String
   availability Boolean
-  priceForTwo  Float
-  updateTimes  Int
+  priceForTwo  String?
 
-  @@map("products")
-}
-
-model Appetizer {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  description  String
-  imageURL String
-  price Float
-  availability Boolean
-  updateTimes  Int
-
-  @@map("appetizers")
-}
-
-model Salad {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  subtype String
-  description  String
-  imageURL String
-  price Float
-  availability Boolean
-  updateTimes  Int
-
-  @@map("salads")
-}
-
-model MainDishe {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  subtype String
-  description String
-  imageURL String
-  price Float
-  priceForTwo Float
-  availability Boolean
-  updateTimes  Int
-
-  @@map("main_dishes")
-}
-
-model Drink {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  subtype String
-  imageURL String
-  description String
-  price Float
-  availability Boolean
-  updateTimes  Int
-
-  @@map("drinks")
-}
-
-model Dessert {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  description  String
-  imageURL String
-  price Float
-  availability Boolean
-  updateTimes  Int
-
-  @@map("desserts")
-}
-
-model ExtraPortion {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  price Float
-  availability Boolean
-
-  @@map("extra_portion")
-}
-
-model Pets {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
-  description String
-  price Float
-  availability Boolean
-  
-  @@map("pets")
+  @@map("products2")
 }
 
 model Wine {
@@ -113,6 +28,7 @@ model Wine {
   glassPrice   Float
   bottlePrice  Float
   imageUrl     String
+  imageId      String
   country      String
   availability Boolean
   updateTimes  Int

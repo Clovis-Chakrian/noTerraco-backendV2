@@ -1,231 +1,227 @@
 import { Request, Response } from 'express'
 import productsView from '../views/products_view';
-import { deleteFile, updateImages, uploadImage } from '../services/imageKit';
-import * as Yup from 'yup';
+//import { deleteFile, updateImages, uploadImage } from '../services/imageKit';
 import prismaClient from '../database/prismaClient';
-
-//the normalize function does not work when i used, so i made this
-function removeSpecialCharacters(text: string) {
-  text = text.toLowerCase();
-  text = text.replace(new RegExp('[ÁÀÂÃ]', 'gi'), 'a');
-  text = text.replace(new RegExp('[ÉÈÊ]', 'gi'), 'e');
-  text = text.replace(new RegExp('[ÍÌÎ]', 'gi'), 'i');
-  text = text.replace(new RegExp('[ÓÒÔÕ]', 'gi'), 'o');
-  text = text.replace(new RegExp('[ÚÙÛ]', 'gi'), 'u');
-  text = text.replace(new RegExp('[Ç]', 'gi'), 'c');
-  return text;
-};
+import removeSpecialCharacters from '../utils/removeSpecialCharacters';
+import { productSchema } from '../yupSchemas/products_schema';
+import { ValidationError } from 'yup';
+import imagekit from '../config/imagekit';
 
 export default {
   async create(request: Request, response: Response) {
     await prismaClient.$connect()
-    const {
-      name,
-      type,
-      subtype,
-      description,
-      memory,
-      image,
-      price,
-      availability
-    } = request.body;
+    const data = request.body;
 
-    const schema = Yup.object().shape({
-      name: Yup.string().required('O campo nome é requerido.'),
-      type: Yup.string().required('O campo tipo é requerido.'),
-      subtype: Yup.string(),
-      description: Yup.string().notRequired(),
-      memory: Yup.string(),
-      imageUrl: Yup.string().notRequired(),
-      price: Yup.string().required('O campo preço é requerido.'),
-      availability: Yup.boolean().required()
-    });
+    await productSchema.validate(data, {
+      abortEarly: false
+    }).then(async () => {
+      if (data.type == 'Porções extras') {
+        const product = {
+          ...data,
+          availability: true
+        };
 
-    const base64 = image.replace(/^data:image\/jpeg;base64,/, "");
-    const fileName = `${removeSpecialCharacters(name.replaceAll(' ', '_'))}`;
-
-    if (type == 'Porções extras') {
-      const product = {
-        name,
-        type,
-        subtype: 'sem subtipo para esse',
-        description: 'sem descrição para esse',
-        memory: 'sem lembrança para esse',
-        imageUrl: 'Sem imagem para esse',
-        price: Number(price),
-        availability,
-        priceForTwo: Number((Number(price) + Number(price) * 0.7).toFixed(2)),
-        updateTimes: 1
+        await prismaClient.product.create({
+          data: {
+            ...product
+          }
+        }).then((product) => {
+          return response.status(201).json({
+            message: `${product.name} adicionado(a) com sucesso.`
+          });
+        }).catch((err) => {
+          console.error(err);
+          return response.status(500).json({
+            message: 'Houve um erro ao criar o produto. Tente novamente mais tarde.',
+            errors: err
+          });
+        });
       };
 
-      await schema.validate(product, {
-        abortEarly: false
-      }).catch((err: Yup.ValidationError) => {
-        return response.status(400).json(err.errors);
+      if (!request.file) {
+        return response.status(400).json({
+          message: 'Você deve anexar uma imagem para criar um produto que não seja do tipo porção extra.'
+        });
+      }
+
+      const file = request.file;
+
+      await imagekit.upload({
+        file: file.buffer,
+        fileName: `${removeSpecialCharacters(data.name.replaceAll(' ', '_'))}-${Date.now()}`,
+        folder: `${data.type === 'Saladas, vegetarianos & veganos' ?
+          'saladas'
+          :
+          data.type === 'Porções extra' ?
+            'extra'
+            :
+            data.type
+          }`,
+        useUniqueFileName: false
+      }).then(async (imageData) => {
+        const product = {
+          ...data,
+          imageUrl: imageData.url,
+          imageId: imageData.fileId,
+          availability: true
+        };
+
+        await prismaClient.product.create({
+          data: {
+            ...product
+          }
+        }).then(resp => {
+          return response.status(201).json({
+            message: `${resp.name} adicionado(a) com sucesso.`
+          });
+        }).catch(err => {
+          console.error(err);
+          return response.status(500).json({
+            message: 'Houve um erro ao salvar o produto. Tente novamente mais tarde.'
+          });
+        });
+      }).catch(err => {
+        console.log(err);
+        return response.status(500).json({
+          message: 'Não foi possível criar o produto pois houve um erro ao fazer upload da imagem.'
+        });
       });
-
-      await prismaClient.product.create({
-        data: product
-      })
-
-      return response.status(201).json({ message: 'Produto criado com sucesso!' });
-    }
-
-    const product = {
-      name,
-      type,
-      subtype,
-      description,
-      memory,
-      imageUrl: fileName,
-      price: Number(price),
-      availability,
-      priceForTwo: Number((Number(price) + Number(price) * 0.7).toFixed(2)),
-      updateTimes: 1
-    };
-
-    await schema.validate(product, {
-      abortEarly: false
-    }).catch((err: Yup.ValidationError) => {
-      return response.status(400).json(err.errors);
+    }).catch((err: ValidationError) => {
+      console.error(err);
+      return response.status(400).json({
+        message: 'Houve um erro ao validar os campos recebidos.',
+        errors: err.errors
+      });
     });
+  },
 
-    uploadImage(base64, `${fileName}_${product.updateTimes}`, '/pratos');
-
-    await prismaClient.product.create({
-      data: product
-    })
-
-    return response.status(201).json({ message: 'Produto criado com sucesso!' });
+  async createMany(request: Request, response: Response) {
+    await prismaClient.$connect();
   },
 
   async index(request: Request, response: Response) {
     await prismaClient.$connect()
 
-    const {
-      name,
-      type 
-    } = request.query as {
-        name: string,
-        type: string
-      };
-
-    if (name) {
-      try {
-        const product = await prismaClient.product.findMany({
-          where: { name, type }
-        });
-
-        return response.status(200).json(productsView.renderMany(product))
-      } catch (error) {
-        console.log(error);
-        return response.status(500).json({ message: 'Erro interno do servidor' });
-      }
-    } else {
-      try {
-        const products = await prismaClient.product.findMany({
-          where: { type },
-          
-        });
-
-        return response.status(200).json(productsView.renderMany(products))
-      } catch (error) {
-        console.log(error);
-        return response.status(500).json({ message: 'Erro interno do servidor' });
-      }
-    };
+    await prismaClient.product.findMany().then((products) => {
+      return response.status(200).json(productsView.renderMany(products));
+    }).catch(err => {
+      console.error(err);
+      return response.status(500).json({
+        message: 'Houve um erro ao buscar os produtos. Tente novamente mais tarde.'
+      });
+    });
   },
 
   async show(request: Request, response: Response) {
     await prismaClient.$connect()
     const { id } = request.params;
 
-    try {
-      const product = await prismaClient.product.findUnique({
-        where: { id }
-      });
+    await prismaClient.product.findUnique({
+      where: { id }
+    }).then(product => {
+      if (!product) {
+        return response.status(400).json({
+          message: 'Produto não encontrado.'
+        });
+      };
 
-      return response.status(200).json(product ? productsView.render(product) : { message: "Produto não encontrado." });
-    } catch (error) {
-      console.log(error);
-      return response.status(500).json({ message: 'Erro interno do servidor' });
-    };
+      return response.status(200).json(productsView.render(product));
+    }).catch(err => {
+      console.error(err);
+      return response.status(500).json({
+        message: 'Houve um erro ao buscar o produto. Tente novamente mais tarde.'
+      });
+    });
   },
 
   async update(request: Request, response: Response) {
+    console.log('Request received!')
     await prismaClient.$connect()
-
-    const {
-      name,
-      type,
-      subtype,
-      description,
-      memory,
-      image,
-      price,
-      availability
-    } = request.body as {
-      name: string,
-      type: string,
-      subtype: string,
-      description: string,
-      memory: string,
-      image: string,
-      price: number,
-      availability: boolean
-    };
 
     const { id } = request.params;
 
-    if (request.body === undefined) return response.status(400).json({ message: 'Não foi passado nenhum dado para ser atualizado' });
+    const data = request.body;
 
-    const data = {
-      name,
-      type,
-      subtype,
-      description,
-      memory,
-      price: Number(price),
-      availability
+    if (!request.file) {
+      await prismaClient.product.update({
+        where: { id },
+        data: {
+          ...data
+        }
+      }).then(() => {
+        return response.status(200).json({
+          message: 'Produto atualizado com sucesso.'
+        });
+      }).catch(err => {
+        console.error(err);
+        return response.status(500).json({
+          message: 'Houve um erro ao atualizar o produto. Tente novamente mais tarde.'
+        });
+      });
     };
 
-    try {
-      const product = await prismaClient.product.findUnique({
+    if (request.file) {
+      const image = request.file;
+
+      await prismaClient.product.findUnique({
         where: { id }
-      });
+      }).then(async (product) => {
+        if (product) {
+          await imagekit.deleteFile(`${product?.imageId}`).then(async () => {
 
-      if (product) {
+            await imagekit.upload({
+              file: image.buffer,
+              fileName: `${removeSpecialCharacters(product?.name.replaceAll(' ', '_'))}-${Date.now()}`,
+              folder: `${product?.type}`,
+              useUniqueFileName: false
+            }).then(async (imageData) => {
+              const updatedProduct = {
+                ...data,
+                imageUrl: imageData.url,
+                imageId: imageData.fileId
+              };
 
-        if (image !== '' && image !== undefined) {
-          const base64 = image.replace(/^data:image\/jpeg;base64,/, "");
-          const fileName = removeSpecialCharacters(product.name.replace(/ /g, '_'));
-          const newImgName = data.name ? removeSpecialCharacters(data.name.replace(/ /g, '_')) : console.log('sem novos nomes');
-          updateImages(`${fileName}_${product.updateTimes}`, base64, `${data.name !== '' && data.name !== undefined ? newImgName : fileName}_${product.updateTimes + 1}`, `pratos`);
-        };
+              await prismaClient.product.update({
+                where: { id },
+                data: {
+                  ...updatedProduct
+                }
+              }).then(resp => {
+                return response.status(200).json({
+                  message: `${resp.name} atualizado(a) com sucesso.`
+                });
+              }).catch(err => {
+                console.error(err);
+                return response.status(500).json({
+                  message: 'Houve um erro ao atualizar o produto. Tente novamente mais tarde.'
+                });
+              });
 
-        const newImgName = data.name ? removeSpecialCharacters(data.name.replace(/ /g, '_')) : console.log('sem novos nomes');
+            }).catch(err => {
+              console.error(err);
+              return response.status(500).json({
+                message: 'Houve um erro ao salvar a nova imagem. Tente novamente mais tarde.'
+              });
+            });
 
-        await prismaClient.product.update({
-          where: { id },
-          data: {
-            name: `${data.name !== '' && data.name !== undefined ? data.name : product.name}`,
-            type: `${data.type !== '' && data.type !== undefined ? data.type : product.type}`,
-            subtype: `${data.subtype !== '' && data.subtype !== undefined ? data.subtype : product.subtype}`,
-            imageUrl: `${data.name !== '' && data.name !== undefined && image !== '' && image !== undefined ? newImgName : product.imageUrl}`,
-            description: `${data.description !== '' && data.description !== undefined ? data.description : product.description}`,
-            memory: `${data.memory !== '' && data.memory !== undefined ? data.memory : product.memory}`,
-            price: data.price !== 0 ? data.price : product.price,
-            availability: data.availability,
-            priceForTwo: data.price !== 0 ? Number((data.price + data.price * 0.7).toFixed(2)) : product.priceForTwo,
-            updateTimes: image !== '' && image !== undefined ? product.updateTimes + 1 : product.updateTimes
-          }
+          }).catch(err => {
+            console.error(err);
+            return response.status(500).json({
+              message: 'Não foi possível atualizar o produto pois houve um erro ao alterar a imagem. Tente novamente mais tarde.'
+            });
+          });
+        } else {
+          return response.status(404).json({
+            message: 'Não foi possível achar o item para atualizá-lo. Erro 404'
+          });
+        }
+
+      }).catch(err => {
+        console.error(err);
+        return response.status(500).json({
+          message: 'Houve um erro ao encontrar o produto para atualizar. Tente novamente mais tarde.'
         });
-
-        return response.status(200).json({ message: 'Produto atualizado com sucesso!' });
-      }
-    } catch (error) {
-      console.log(error);
-      return response.status(500).json({ message: 'Erro interno do servidor' });
+      });
     }
   },
 
@@ -233,27 +229,35 @@ export default {
     await prismaClient.$connect();
     const { id } = request.params;
 
-    try {
-      const product = await prismaClient.product.findUnique({
+    await prismaClient.product.findUnique({
+      where: { id }
+    }).then(async product => {
+      if (product?.imageId) {
+        await imagekit.deleteFile(product?.imageId).then(async () => {
+          await prismaClient.product.delete({
+            where: { id }
+          }).then(() => {
+            return response.status(200).json({
+              message: 'Produto deletado com sucesso.'
+            });
+          }).catch(err => {
+            console.error(err);
+            return response.status(500).json({
+              message: 'Houve um erro ao deletar o produto. Tente novamente mais tarde.'
+            });
+          });
+
+        }).catch(err => {
+          console.error(err);
+          return response.status(500).json({
+            message: 'Não foi possível deletar o produto pois houve um erro ao deletar a imagem. Tente novamente mais tarde.'
+          });
+        });
+      };
+
+      await prismaClient.product.delete({
         where: { id }
       });
-
-      if (product) {
-
-        await prismaClient.product.delete({
-          where: { id }
-        }).then(() => {
-          const fileName = removeSpecialCharacters(product.name.replace(/ /g, '_'));
-          deleteFile(`${fileName}_${product.updateTimes}`, '/');
-        }).catch((err: any) => {
-          console.error(err);
-        });
-
-        return response.status(200).json({ message: `${product.name} deletado com sucesso!` })
-      }
-    } catch (error) {
-      console.log(error);
-      return response.status(500).json({ message: 'Erro interno do servidor' });
-    }
+    });
   },
 };

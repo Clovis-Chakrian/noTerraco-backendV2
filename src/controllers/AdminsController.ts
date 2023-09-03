@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import prismaClient from '../database/prismaClient';
 import adminsView from '../views/admins_view';
+import { adminSchema } from '../yupSchemas/admins_schemas';
+import { ValidationError } from 'yup';
+import bcrypt from 'bcrypt';
+import { Admin } from '@prisma/client';
 import md5 from 'md5';
-import * as Yup from 'yup';
+import jwt from 'jwt-simple';
 
 
 export default {
@@ -13,33 +17,54 @@ export default {
       name,
       password,
       accountType
-    } = req.body as {
-      name: string,
-      password: string,
-      accountType: string
-    };
+    } = req.body
 
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
-      password: Yup.string().required(),
-      accountType: Yup.string().required(),
-    });
-
-    const encryptedPassword = md5(password)
-
-    const admin = {
+    const data = {
       name,
-      password: encryptedPassword,
+      password,
       accountType
     }
 
-    await schema.validate(admin, {
+    await adminSchema.validate(data, {
       abortEarly: false
+    }).then(async () => {
+      await bcrypt.hash(password, Number(process.env.SALT_ROUNDS)).then(async hash => {
+        const admin = {
+          name,
+          password: hash,
+          accountType
+        };
+
+        await prismaClient.admin.create({
+          data: admin
+        }).then((resp: Admin) => {
+          const token = jwt.encode({ id: resp.id, accountType: resp.accountType }, String(process.env.JWT_SECRET));
+          return res.status(201).json({
+            token
+          });
+        }).catch((err) => {
+          console.error(err);
+          return res.status(500).json({
+            message: 'Houve um erro interno da aplicação.'
+          });
+        });
+      }).catch((err) => {
+        console.log(err);
+        return res.status(500).json({
+          message: 'Houve um erro ao encriptar sua senha, tente novamente mais tarde.',
+          error: err
+        });
+      });
+
+    }).catch((err: ValidationError) => {
+      console.error(err);
+      return res.status(400).json({
+        message: 'Houve um erro na solicitação.',
+        errors: err
+      });
     });
 
-    await prismaClient.admin.create({
-      data: admin
-    });
+
 
     return res.status(200).json({ message: 'Admin criado com sucesso' });
   },
