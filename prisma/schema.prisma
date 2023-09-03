@@ -19,7 +19,7 @@ model Product {
   availability Boolean
   priceForTwo  String?
 
-  @@map("products")
+  @@map("products2")
 }
 
 model Wine {
