@@ -1,18 +1,22 @@
 export default {
-  format(price: string) {
-    //const price = String(price);
-    if (price.includes('.')) {
-      if (price.split('.')[1].length == 2) {
-        const formatedPrice = price.replace('.', ',');
+  format(price: number | null) {
+    if (price == null) {
+      return ""
+    };
+
+    const priceAsString = String(price);
+    if (priceAsString.includes('.')) {
+      if (priceAsString.split('.')[1].length == 2) {
+        const formatedPrice = priceAsString.replace('.', ',');
 
         return formatedPrice;
       } else {
-        const formatedPrice = price.replace('.', ',') + '0';
+        const formatedPrice = priceAsString.replace('.', ',') + '0';
 
         return formatedPrice;
       }
     } else {
-      const formatedPrice = price + ',00'
+      const formatedPrice = priceAsString + ',00'
 
       return formatedPrice;
     };

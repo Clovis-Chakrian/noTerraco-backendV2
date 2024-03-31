@@ -6,9 +6,12 @@ import removeSpecialCharacters from '../utils/removeSpecialCharacters';
 import { productSchema } from '../yupSchemas/products_schema';
 import { ValidationError } from 'yup';
 import imagekit from '../config/imagekit';
+import { ProductService } from '../services/products/ProductService';
 
 export default {
   async create(request: Request, response: Response) {
+    const p = new ProductService();
+    return p.getAll(request, response);
     await prismaClient.$connect()
     const data = request.body;
 

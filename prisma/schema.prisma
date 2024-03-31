@@ -15,11 +15,11 @@ model Product {
   description  String?
   imageUrl     String?
   imageId      String?
-  price        String
+  price        Int
   availability Boolean
-  priceForTwo  String?
+  priceForTwo  Int?
 
-  @@map("products2")
+  @@map("products3")
 }
 
 model Wine {

@@ -4,13 +4,14 @@ import multerConfig from "../config/multerConfig";
 // import AdminsController from "../controllers/AdminsController";
 import ProductsController from "../controllers/ProductsController";
 import WinesController from "../controllers/WinesController";
+import { ProductService } from "../services/products/ProductService";
 
 const upload = multer(multerConfig);
-
+const productService = new ProductService();
 const productsRoutes = express.Router();
 
-productsRoutes.post('/product', upload.single('image'), ProductsController.create)
-productsRoutes.get('/products', ProductsController.index);
+productsRoutes.post('/products', upload.single('image'), productService.create)
+productsRoutes.get('/products', productService.getAll);
 productsRoutes.get('/product/:id', ProductsController.show);
 productsRoutes.patch('/product/:id', upload.single('image'), ProductsController.update);
 productsRoutes.delete('/product/:id', ProductsController.delete);
