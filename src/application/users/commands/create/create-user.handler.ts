@@ -23,13 +23,13 @@ class CreateUserCommandHandler
     const encodedPass = await this.passwordEncoder.encript(command.newUserDto.password);
     let user = new User(command.newUserDto.fullname, command.newUserDto.email, encodedPass);
     const role = await this.getRolesForUserType(command.userType);
-    console.log(role);
     user.addRole(role);
     
     user = await this.userRepository.create(user)
     const accessToken = await this.tokenService.generateToken(user);
+    const refreshToken = await this.tokenService.generateRefreshToken(user);
 
-    return new TokenDto(accessToken, 'asd');
+    return new TokenDto(accessToken, refreshToken);
   }
 
   private async getRolesForUserType(userType: UserTypeEnum): Promise<Role> {

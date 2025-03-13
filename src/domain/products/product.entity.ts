@@ -27,6 +27,24 @@ class Product extends BaseEntity {
     this.available = true;
     this.category = category;
   }
+
+  update(
+    name: string,
+    description: string,
+    image: string,
+    price: number,
+    category: Category,
+  ) {
+    this.name = name;
+    this.description = description;
+    this.price = price;
+    this.image = image;
+    this.category = category;
+  }
+
+  toggleAvailability(): void {
+    this.available = !this.available;
+  }
 }
 
 export { Product };

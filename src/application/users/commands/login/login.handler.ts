@@ -22,8 +22,9 @@ class LoginCommandHandler
     if (!correctPass) throw new UnauthorizedException();
 
     const accessToken = await this.tokenService.generateToken(user);
+    const refreshToken = await this.tokenService.generateRefreshToken(user);
 
-    return new TokenDto(accessToken, 'asd');
+    return new TokenDto(accessToken, refreshToken);
   }
 }
 

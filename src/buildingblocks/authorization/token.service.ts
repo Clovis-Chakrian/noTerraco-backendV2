@@ -3,11 +3,14 @@ import { BaseUser } from "./entities/base-user.entity";
 import { Injectable } from "@nestjs/common";
 import { UUID } from "crypto";
 import { ITokenPayload } from "../types/token-payload.interface";
+import { RefreshTokenRepository } from "src/infra/refresh-tokens/refresh-token.repository";
+import { RefreshToken } from "src/domain/refresh-tokens/refresh-token.entity";
 
 @Injectable()
 class TokenService {
   constructor(
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly refreshTokenRepository: RefreshTokenRepository
   ) { }
 
   async generateToken<TUser extends BaseUser>(user: TUser): Promise<string> {
@@ -19,6 +22,12 @@ class TokenService {
     }
 
     return await this.jwtService.signAsync(payload, { secret: process.env.JWT_SECRET, issuer: process.env.JWT_ISSUER });
+  }
+
+  async generateRefreshToken<TUser extends BaseUser>(user: TUser): Promise<string> {
+    const refresh = new RefreshToken(user);
+
+    return (await this.refreshTokenRepository.create(refresh)).token;
   }
 
   async verifyToken(token: string): Promise<ITokenPayload> {
